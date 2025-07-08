@@ -38,7 +38,7 @@ if os.path.exists('token.pickle'):
     with open('token.pickle', 'rb') as token:
         creds = pickle.load(token)
 else:
-    flow = InstalledAppFlow.from_client_secrets_file('/Users/huntergoat/Documents/Data Science /client_secret_87210539059-05k0iuk4biinjco5ugdrev7q1otv1i5d.apps.googleusercontent.com.json', SCOPES)
+    flow = InstalledAppFlow.from_client_secrets_file('/Users/huntergoat/Documents/Data Science /client_secret_667734235339-8dcrpkkbkpl15366mmemtqi6ls75mpcr.apps.googleusercontent.com.json', SCOPES)
     creds = flow.run_local_server(port=0)
     with open('token.pickle', 'wb') as token:
         pickle.dump(creds, token)
