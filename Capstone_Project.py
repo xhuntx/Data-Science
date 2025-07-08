@@ -30,7 +30,7 @@ x_train, x_test, y_train, y_test = train_test_split(x, labels, test_size=0.01)
 model = DecisionTreeClassifier()
 model.fit(x_train, y_train)
 
-# ========== STEP 2: Gmail API Setup ==========
+# STEP 2: Gmail API Setup 
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 creds = None
 
@@ -45,7 +45,7 @@ else:
 
 service = build('gmail', 'v1', credentials=creds)
 
-# ========== STEP 3: Read Recent Senders from Gmail ==========
+#  Read Recent Senders from Gmail 
 results = service.users().messages().list(userId='me', labelIds=['INBOX'], maxResults=10).execute()
 messages = results.get('messages', [])
 
@@ -62,7 +62,7 @@ print("\nExtracted Email Senders from Gmail:")
 for e in email_list:
     print("•", e)
 
-# ========== STEP 4: Predict ==========
+#  Predict 
 email_vectors = v.transform(email_list)
 predictions = model.predict(email_vectors)
 
