@@ -26,24 +26,3 @@ newEmailVector = v.transform(["DspignerDavis@gmail.com"])#EAMPLE EMAIL
 predictions = model.predict(newEmailVector)
 print(predictions)
 
-input()#BREAK TO TALK 
-
-# Sorting my  data 
-myData = pd.DataFrame(pd.read_csv("/Users/huntergoat/Downloads/Csv for Capstone project - Sheet1.csv"))
-EmailVector = v.transform(myData['Email'])
-filtering = model.predict(EmailVector)
-myData['Spam Dection'] = filtering
-filtering = myData[myData['Spam Dection'] ==0 ]
-print(filtering)
-filtering.to_csv("/Users/huntergoat/Downloads/Capstone Project.csv")
-
-
-# Class Data
-classData = pd.DataFrame(pd.read_csv("/Users/huntergoat/Downloads/capstoneDataFrame - Sheet1.csv"))
-EmailVector1 = v.transform(classData['Email'])
-filtering1 = model.predict(EmailVector1)
-classData['Spam Dection'] = filtering1
-filtering1 = classData[classData['Spam Dection'] ==0 ]
-print(filtering1)
-filtering1.to_csv("/Users/huntergoat/Downloads/Capstone Project (Data Given).csv")
-
