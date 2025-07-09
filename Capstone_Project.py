@@ -24,9 +24,9 @@ Emails = [
     "qteepie1212@aol.com", "Budzeyday@aol.com", "laura.brown@meditechgroup.com", "user9321@guerrillamail.com",
     "test8823@temp-mail.org", "guest1145@10minutemail.com", "demo7432@dropmail.me",
     "mailbot6590@maildrop.cc", "emily.johnson94@gmail.com", "michael.brooks21@yahoo.com",
-    "sarah.taylor@outlook.com", "daniel.martinez83@hotmail.com", "laura.nguyen01@gmail.com", "googlecloud@google.com"
+    "sarah.taylor@outlook.com", "daniel.martinez83@hotmail.com", "laura.nguyen01@gmail.com", "googlecloud@google.com","security@getgitguardian.com","no-reply@accounts.google.com","support@github.com","honinghindus@gmail.com"
 ]
-labels = [1]*10 + [0]*11 + [1]*5 + [0]*7
+labels = [1]*10 + [0]*11 + [1]*5 + [0]*10 + [1]*1
 
 v = CountVectorizer()
 x = v.fit_transform(Emails)
@@ -61,6 +61,16 @@ def authenticate_gmail():
 # ==== Spam Detection + GUI Integration ====
 def classify_emails():
     result_text.delete(1.0, tk.END)
+
+    try:
+        num_to_fetch = int(email_count_entry.get())
+        if num_to_fetch <= 0:
+            result_text.insert(tk.END, "Please enter a number greater than 0.\n")
+            return
+    except ValueError:
+        result_text.insert(tk.END, "Invalid input. Enter a number.\n")
+        return
+
     try:
         service = authenticate_gmail()
     except Exception as e:
@@ -68,7 +78,7 @@ def classify_emails():
         return
 
     try:
-        results = service.users().messages().list(userId='me', labelIds=['INBOX'], maxResults=10).execute()
+        results = service.users().messages().list(userId='me', labelIds=['INBOX'], maxResults=num_to_fetch).execute()
         messages = results.get('messages', [])
     except Exception as e:
         result_text.insert(tk.END, f"Error accessing Gmail: {e}\n")
@@ -108,15 +118,20 @@ def classify_emails():
 # ==== GUI Setup ====
 root = tk.Tk()
 root.title("Gmail Spam Classifier")
-root.geometry("640x450")
+root.geometry("640x500")
 
-frame = tk.Frame(root)
-frame.pack(pady=10)
+top_frame = tk.Frame(root)
+top_frame.pack(pady=10)
 
-btn = tk.Button(frame, text="Scan Gmail Inbox", command=classify_emails, font=("Arial", 14))
-btn.pack()
+tk.Label(top_frame, text="Number of emails to scan:", font=("Arial", 12)).pack(side=tk.LEFT, padx=5)
+email_count_entry = tk.Entry(top_frame, width=5, font=("Arial", 12))
+email_count_entry.pack(side=tk.LEFT)
+email_count_entry.insert(0, "10")  # default value
 
-result_text = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=80, height=20, font=("Courier", 10))
+scan_btn = tk.Button(top_frame, text="Scan Inbox", command=classify_emails, font=("Arial", 12))
+scan_btn.pack(side=tk.LEFT, padx=10)
+
+result_text = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=80, height=25, font=("Courier", 10))
 result_text.pack(pady=10)
 
 root.mainloop()

@@ -5,7 +5,7 @@ a = Analysis(
     ['Capstone_Project.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('/Users/huntergoat/Documents/Data Science /client_secret_667734235339-8dcrpkkbkpl15366mmemtqi6ls75mpcr.apps.googleusercontent.com.json', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
