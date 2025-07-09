@@ -7,9 +7,13 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 import base64
 import pickle
-import os.path
-import email
+import os
+import sys
 
+# ==== Gmail API Scope ====
+SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
+
+# ==== ML Spam Classifier Setup ====
 Emails = [
     "bafake5232@decodewp.com", "brightsky39@emailondeck.com", "vortex.mirror@fakeinbox.com",
     "nightowl921@moakt.cc", "zenpanda456@guerrillamail.com", "coolcloud888@10minutemail.com",
@@ -20,42 +24,56 @@ Emails = [
     "qteepie1212@aol.com", "Budzeyday@aol.com", "laura.brown@meditechgroup.com", "user9321@guerrillamail.com",
     "test8823@temp-mail.org", "guest1145@10minutemail.com", "demo7432@dropmail.me",
     "mailbot6590@maildrop.cc", "emily.johnson94@gmail.com", "michael.brooks21@yahoo.com",
-    "sarah.taylor@outlook.com", "daniel.martinez83@hotmail.com", "laura.nguyen01@gmail.com", "googlecloud@google.com","notifications@instructure.com"
+    "sarah.taylor@outlook.com", "daniel.martinez83@hotmail.com", "laura.nguyen01@gmail.com", "googlecloud@google.com"
 ]
+labels = [1]*10 + [0]*11 + [1]*5 + [0]*7
 
-labels = [1]*10 + [0]*11 + [1]*5 + [0]*8
 v = CountVectorizer()
 x = v.fit_transform(Emails)
 x_train, x_test, y_train, y_test = train_test_split(x, labels, test_size=0.01)
 model = DecisionTreeClassifier()
 model.fit(x_train, y_train)
 
-
-SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
-creds = None
-service = None
+# ==== Gmail API Auth ====
+def get_client_secret_path():
+    if getattr(sys, 'frozen', False):
+        # PyInstaller bundle
+        return os.path.join(sys._MEIPASS, '/Users/huntergoat/Documents/Data Science /client_secret_667734235339-8dcrpkkbkpl15366mmemtqi6ls75mpcr.apps.googleusercontent.com.json')
+    else:
+        return os.path.abspath('/Users/huntergoat/Documents/Data Science /client_secret_667734235339-8dcrpkkbkpl15366mmemtqi6ls75mpcr.apps.googleusercontent.com.json')
 
 def authenticate_gmail():
     global service
+    creds = None
+
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
             creds = pickle.load(token)
     else:
-        flow = InstalledAppFlow.from_client_secrets_file(
-            '/Users/huntergoat/Documents/Data Science /client_secret_667734235339-8dcrpkkbkpl15366mmemtqi6ls75mpcr.apps.googleusercontent.com.json', SCOPES
-        )
+        flow = InstalledAppFlow.from_client_secrets_file(get_client_secret_path(), SCOPES)
         creds = flow.run_local_server(port=0)
         with open('token.pickle', 'wb') as token:
             pickle.dump(creds, token)
-    service = build('gmail', 'v1', credentials=creds)
 
+    service = build('gmail', 'v1', credentials=creds)
+    return service
+
+# ==== Spam Detection + GUI Integration ====
 def classify_emails():
-    authenticate_gmail()
     result_text.delete(1.0, tk.END)
-    
-    results = service.users().messages().list(userId='me', labelIds=['INBOX'], maxResults=35).execute()
-    messages = results.get('messages', [])
-    
+    try:
+        service = authenticate_gmail()
+    except Exception as e:
+        result_text.insert(tk.END, f"Auth Error: {e}\n")
+        return
+
+    try:
+        results = service.users().messages().list(userId='me', labelIds=['INBOX'], maxResults=10).execute()
+        messages = results.get('messages', [])
+    except Exception as e:
+        result_text.insert(tk.END, f"Error accessing Gmail: {e}\n")
+        return
+
     if not messages:
         result_text.insert(tk.END, "No emails found.\n")
         return
@@ -69,7 +87,7 @@ def classify_emails():
         sender = next((h['value'] for h in headers if h['name'] == 'From'), "Unknown")
         email_list.append(sender)
         full_message_info.append((msg['id'], sender))
-    
+
     vectors = v.transform(email_list)
     predictions = model.predict(vectors)
 
@@ -83,20 +101,22 @@ def classify_emails():
                 id=msg_id,
                 body={'addLabelIds': ['SPAM'], 'removeLabelIds': ['INBOX']}
             ).execute()
-            result_text.insert(tk.END, f"→ Moved to SPAM folder.\n")
+            result_text.insert(tk.END, "→ Moved to SPAM folder.\n")
+
         result_text.insert(tk.END, "\n")
 
+# ==== GUI Setup ====
 root = tk.Tk()
 root.title("Gmail Spam Classifier")
-root.geometry("600x400")
+root.geometry("640x450")
 
 frame = tk.Frame(root)
 frame.pack(pady=10)
 
-scan_btn = tk.Button(frame, text="Scan Inbox", command=classify_emails, font=("Arial", 14))
-scan_btn.pack()
+btn = tk.Button(frame, text="Scan Gmail Inbox", command=classify_emails, font=("Arial", 14))
+btn.pack()
 
-result_text = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=70, height=20, font=("Courier", 10))
+result_text = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=80, height=20, font=("Courier", 10))
 result_text.pack(pady=10)
 
 root.mainloop()
